@@ -1,0 +1,23 @@
+bundle:
+  name: Azure-Adventure-Works-Project
+
+sync:
+  exclude:
+    - AdventureWorksData/**
+
+include:
+  - resources/*.yml
+  - resources/*/*.yml
+
+targets:
+  dev:
+    mode: development
+    default: true
+
+    presets:
+      name_prefix: dev_${workspace.current_user.short_name}_
+      source_linked_deployment: false
+
+    workspace:
+      host: https://adb-7405610219927736.16.azuredatabricks.net
+      profile: ADVENTURE_WORKS

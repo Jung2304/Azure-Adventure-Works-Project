@@ -1,0 +1,59 @@
+resources:
+  jobs:
+    adventure_works_job:
+      name: AdventureWorks_Gold_Job
+
+      max_concurrent_runs: 1
+
+      tasks:
+        # 1. Refresh Silver pipeline
+        - task_key: refresh_silver
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.silver_layer.id}
+
+        # 2. Build Gold dimensions
+        - task_key: build_dims_gold
+          depends_on:
+            - task_key: refresh_silver
+          notebook_task:
+            notebook_path: ${workspace.file_path}/gold/Dimension_Builder/Dimension_Tables.ipynb
+            source: WORKSPACE
+            base_parameters:
+              catalog: adb_adventureworks_project
+              silver_schema: silver_dev
+              gold_schema: gold_dev
+
+        # 3. Incremental Gold fact MERGE
+        - task_key: build_fact_gold
+          depends_on:
+            - task_key: build_dims_gold
+          notebook_task:
+            notebook_path: ${workspace.file_path}/gold/Fact_Tables/Fact_Builder.ipynb
+            source: WORKSPACE
+            base_parameters:
+              catalog: adb_adventureworks_project
+              silver_schema: silver_dev
+              gold_schema: gold_dev
+
+        # 4. Refresh monthly sales aggregate
+        - task_key: refresh_monthly_sales
+          depends_on:
+            - task_key: build_fact_gold
+          notebook_task:
+            notebook_path: ${workspace.file_path}/analytics/agg_monthly_sales.ipynb
+            source: WORKSPACE
+            base_parameters:
+              catalog: adb_adventureworks_project
+              gold_schema: gold_dev
+
+        # 5. Validate Gold data quality
+        - task_key: quality_check
+          depends_on:
+            - task_key: refresh_monthly_sales
+          notebook_task:
+            notebook_path: ${workspace.file_path}/gold/Quality_Check/Gold_Data_Quality_Checks.ipynb
+            source: WORKSPACE
+            base_parameters:
+              catalog: adb_adventureworks_project
+              silver_schema: silver_dev
+              gold_schema: gold_dev

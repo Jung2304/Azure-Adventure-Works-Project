@@ -1,0 +1,17 @@
+resources:
+  pipelines:
+    silver_layer:
+      name: silver_layer
+      catalog: adb_adventureworks_project
+      schema: silver_dev
+
+      serverless: true
+      photon: true
+      channel: CURRENT
+      continuous: false
+
+      root_path: ../silver/silver_layer
+
+      libraries:
+        - glob:
+            include: ../silver/silver_layer/transformations/**

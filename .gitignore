@@ -1,0 +1,19 @@
+.databricks/
+
+# Generated validation
+bundle_validation.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Credentials and environment variables
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Editors
+.vscode/
