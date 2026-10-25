@@ -23,10 +23,22 @@ resources:
               silver_schema: silver_dev
               gold_schema: gold_dev
 
-        # 3. Incremental Gold fact MERGE
+        # 3. Ensure Silver current-state view
+        - task_key: ensure_sales_current_view
+          depends_on:
+            - task_key: refresh_silver
+          notebook_task:
+            notebook_path: ${workspace.file_path}/gold/Views/Ensure_Sales_Current_View.py
+            source: WORKSPACE
+            base_parameters:
+              catalog: adb_adventureworks_project
+              silver_schema: silver_dev
+
+        # 4. Incremental Gold fact MERGE
         - task_key: build_fact_gold
           depends_on:
             - task_key: build_dims_gold
+            - task_key: ensure_sales_current_view
           notebook_task:
             notebook_path: ${workspace.file_path}/gold/Fact_Tables/Fact_Builder.ipynb
             source: WORKSPACE
@@ -35,7 +47,7 @@ resources:
               silver_schema: silver_dev
               gold_schema: gold_dev
 
-        # 4. Refresh monthly sales aggregate
+        # 5. Refresh monthly sales aggregate
         - task_key: refresh_monthly_sales
           depends_on:
             - task_key: build_fact_gold
@@ -46,7 +58,7 @@ resources:
               catalog: adb_adventureworks_project
               gold_schema: gold_dev
 
-        # 5. Validate Gold data quality
+        # 6. Validate Gold data quality
         - task_key: quality_check
           depends_on:
             - task_key: refresh_monthly_sales

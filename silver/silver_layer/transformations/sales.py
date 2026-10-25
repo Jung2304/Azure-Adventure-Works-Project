@@ -21,7 +21,8 @@ sales_schema = StructType([
     StructField("CustomerKey", IntegerType()),
     StructField("TerritoryKey", IntegerType()),
     StructField("OrderLineItem", IntegerType()),
-    StructField("OrderQuantity", IntegerType())
+    StructField("OrderQuantity", IntegerType()),
+    StructField("RecordVersion", IntegerType(), True)       # True: Allows NULL records
 ])
 
 # Bronze: Read files, using Auto Loader by default in pipelines
@@ -41,15 +42,18 @@ def sales_silver_table():
     df = dp.read_stream("sales_stg")
 
     return (df
+            .withColumn("RecordVersion", coalesce(
+              col("RecordVersion"), lit(1)
+            )
+        )
             .withColumn("OrderDate", coalesce(
-                try_to_timestamp(col("OrderDate"), lit("M/d/yyyy")),
-                try_to_timestamp(col("OrderDate"), lit("yyyy-MM-dd"))
+              try_to_timestamp(col("OrderDate"), lit("M/d/yyyy")),
+              try_to_timestamp(col("OrderDate"), lit("yyyy-MM-dd"))
             )
         )
         .withColumn("StockDate", coalesce(
-                try_to_timestamp(col("StockDate"), lit("M/d/yyyy")),
-                try_to_timestamp(col("StockDate"), lit("yyyy-MM-dd"))
+              try_to_timestamp(col("StockDate"), lit("M/d/yyyy")),
+              try_to_timestamp(col("StockDate"), lit("yyyy-MM-dd"))
             )
         )
     )
-                
